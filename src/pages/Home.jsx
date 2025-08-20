@@ -20,6 +20,7 @@ const Home = () => {
     audioRef.current.loop = true;
   }, []);
   const [isRotating, setIsRotating] = useState(false);
+  const canvasRef = useRef(null);
 
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
 
@@ -32,7 +33,29 @@ const Home = () => {
       }
     }
   }, [isPlayingMusic]);
+
+  const [showHint, setShowHint] = useState(true);
+
+  // Hide hint when user interacts
+  useEffect(() => {
+    const canvas = canvasRef.current?.domElement || document.querySelector('canvas');
   
+    const hideHint = () => {
+      setShowHint(false);
+    };
+  
+    if (canvas) {
+      canvas.addEventListener('pointerdown', hideHint);
+      canvas.addEventListener('touchstart', hideHint);
+    }
+  
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener('pointerdown', hideHint);
+        canvas.removeEventListener('touchstart', hideHint);
+      }
+    };
+  }, []);
 
   const adjustIslandForScreenSize = () => {
     let screenScale = null;
@@ -40,7 +63,8 @@ const Home = () => {
     let rotation = [0.1, 4.7,0];
 
     if (window.innerWidth < 768) {
-      screenScale = [0.9, 0.9, 0.9];
+      screenScale = [0.8, 0.8, 0.8]; // slightly smaller
+      screenPosition = [0, -7, -48]; // further away
     } else{
       screenScale= [1,1,1];
     }
@@ -74,10 +98,21 @@ const [currentStage, setCurrentStage] = useState(1);
       <div className='absolute top-28 left-0 right-0 z-10 flex items-center justify-center'>
         {currentStage && <Homeinfo currentStage={currentStage} />}
       </div>
-      <Canvas className=
-      {`w-full h-screen bg-transparent ${isRotating ? 'cursor-grabbing': 'cursor-grab'} `}
+      {showHint && (
+        <div className={`absolute bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-2 text-white text-sm rounded-full shadow-lg animate-pulse z-20 transition-opacity duration-500 ${
+          showHint ? 'opacity-100 bg-black/60' : 'opacity-0 pointer-events-none'
+        }`}>
+          👉 Drag to rotate the island
+        </div>
+      )}
+
+      <Canvas 
+      ref={canvasRef}
+      className={`w-full h-screen bg-transparent ${isRotating ? 'cursor-grabbing': 'cursor-grab'} `}
       camera={{near: 0.1, far:1000}}
       >
+        
+        
         <Suspense fallback={<Loader/>}>
           <directionalLight
           position= {[1,1,1]}
@@ -114,6 +149,9 @@ const [currentStage, setCurrentStage] = useState(1);
         </Suspense>
 
       </Canvas>
+
+      
+
       <div className='absolute bottom-2 left-2'>
         <img src={isPlayingMusic ? soundoff : soundon}
           className='w-10 h-10 cursor-pointer object-contain' 

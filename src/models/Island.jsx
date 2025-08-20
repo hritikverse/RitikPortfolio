@@ -47,12 +47,13 @@ const Island = ({ isRotating, setIsRotating, setCurrentStage, ...props }) => {
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
 
             const delta = (clientX - lastX.current) / viewport.width;
-    
-            islandRef.current.rotation.y += delta * 0.01 * Math.PI;
-    
+
+            const isMobile = window.innerWidth < 768; // ✅ Added
+            const sensitivity = isMobile ? 0.005 : 0.01; // ✅ Reduced sensitivity on mobile
+
+            islandRef.current.rotation.y += delta * sensitivity * Math.PI;
             lastX.current = clientX;
-    
-            rotationSpeed.current = delta * 0.01 * Math.PI;
+            rotationSpeed.current = delta * sensitivity * Math.PI;
         }
     }
 
